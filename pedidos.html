@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Pedidos - Restaurante</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .fade-in { animation: fadeIn 0.5s ease-in; }
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; max-width: 500px; width: 90%; }
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background-color: #059669; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex; align-items: center; z-index: 999;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <header class="bg-emerald-800 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <img src="https://placehold.co/40" alt="Logo do restaurante" class="rounded-full">
+        <h1 class="text-2xl font-bold">Restaurante Gourmet</h1>
+      </div>
+      <nav>
+        <ul class="flex space-x-4">
+          <li><a href="#" id="clientLink" class="px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 transition">Área do Cliente</a></li>
+          <li><a href="#" id="attendantLink" class="px-3 py-2 rounded-lg hover:bg-emerald-700 transition">Área do Atendente</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8" id="mainContent"></div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmationModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 class="text-xl font-bold mb-4" id="modalTitle"></h3>
+      <p class="mb-6" id="modalMessage"></p>
+      <div class="flex justify-end space-x-4">
+        <button id="modalCancel" class="px-4 py-2 border border-gray-300 rounded-lg">Cancelar</button>
+        <button id="modalConfirm" class="px-4 py-2 bg-emerald-600 text-white rounded-lg">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Banco de dados local (simulado)
+    const menuItems = {
+      'Entradas': [
+        { id: 1, name: 'Pão de Alho', price: 12.90, description: 'Pão italiano com alho e queijo derretido', image: 'https://placehold.co/300x200?text=Pão+de+Alho' },
+        { id: 2, name: 'Bruschetta', price: 14.50, description: 'Torradas com tomate, manjericão e azeite', image: 'https://placehold.co/300x200?text=Bruschetta' }
+      ],
+      'Pratos Principais': [
+        { id: 3, name: 'Filé Mignon', price: 59.90, description: '250g com molho de vinho tinto', image: 'https://placehold.co/300x200?text=Filé+Mignon' },
+        { id: 4, name: 'Risoto de Camarão', price: 45.50, description: 'Arroz arbóreo com camarões', image: 'https://placehold.co/300x200?text=Risoto' }
+      ],
+      'Bebidas': [
+        { id: 5, name: 'Água Mineral', price: 5.00, description: 'Garrafa 500ml', image: 'https://placehold.co/300x200?text=Água' },
+        { id: 6, name: 'Refrigerante', price: 7.50, description: 'Lata 350ml', image: 'https://placehold.co/300x200?text=Refri' }
+      ]
+    };
+
+    // Estado global
+    let state = {
+      currentView: 'client',
+      currentTable: null,
+      cart: [],
+      orders: JSON.parse(localStorage.getItem('restaurantOrders')) || []
+    };
+
+    // Elementos DOM
+    const mainContent = document.getElementById('mainContent');
+    const confirmationModal = document.getElementById('confirmationModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      if (state.currentTable) {
+        state.cart = JSON.parse(localStorage.getItem(`table_${state.currentTable}_cart`)) || [];
+      }
+
+      document.getElementById('clientLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        loadClientView();
+      });
+
+      document.getElementById('attendantLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        loadAttendantView();
+      });
+
+      modalCancel.addEventListener('click', () => {
+        confirmationModal.classList.add('hidden');
+      });
+
+      loadClientView();
+
+      // Verificador de atualizações a cada 2 segundos
+      setInterval(checkForUpdates, 2000);
+    });
+
+    // Funções principais
+    function loadClientView() {
+      state.currentView = 'client';
+      updateActiveNav();
+      renderClientView();
+    }
+
+    function loadAttendantView() {
+      state.currentView = 'attendant';
+      updateActiveNav();
+      renderAttendantView();
+    }
+
+    function renderClientView() {
+      mainContent.innerHTML = `
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl font-bold mb-6 text-gray-800">Faça Seu Pedido</h2>
+          ${!state.currentTable ? renderTableView() : renderMenuView()}
+        </div>
+      `;
+
+      if (state.currentTable) {
+        filterMenu(Object.keys(menuItems)[0]);
+        setSubmitButtonState(); // garante estado do botão após renderização
+      }
+    }
+
+    function renderTableView() {
+      return `
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8 fade-in">
+          <h3 class="text-xl font-semibold mb-4 text-gray-700">Informe o número da sua mesa</h3>
+          <div class="grid grid-cols-4 md:grid-cols-8 gap-2">
+            ${Array.from({length: 10}, (_, i) => i + 1).map(num => `
+              <button onclick="selectTable(${num})" class="py-3 px-2 bg-gray-100 hover:bg-emerald-100 rounded-lg transition border border-gray-200 hover:border-emerald-300 text-gray-700 hover:text-emerald-800 font-medium">
+                ${num}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMenuView() {
+      return `
+        <div class="flex flex-col lg:flex-row gap-8">
+          <div class="lg:w-2/3">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold text-gray-700">Menu - Mesa ${state.currentTable}</h3>
+              <button onclick="changeTable()" class="text-sm text-emerald-600 hover:text-emerald-800 font-medium">
+                <i class="fas fa-exchange-alt mr-1"></i> Trocar mesa
+              </button>
+            </div>
+
+            <div id="menuCategories" class="mb-6">
+              <div class="flex space-x-2 overflow-x-auto pb-2">
+                ${Object.keys(menuItems).map((category, index) => `
+                  <button onclick="filterMenu('${category}')" class="category-btn px-4 py-2 rounded-full ${index === 0 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-emerald-200 hover:text-emerald-800 transition whitespace-nowrap">
+                    ${category}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div id="menuItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${renderMenuItems(menuItems[Object.keys(menuItems)[0]])}
+            </div>
+          </div>
+
+          <div class="lg:w-1/3">
+            <div class="bg-white rounded-xl shadow-md p-6 sticky top-4">
+              <h3 class="text-xl font-semibold mb-4 text-gray-700 flex justify-between items-center">
+                <span>Seu Pedido</span>
+                <span class="text-sm font-normal text-gray-500">Mesa ${state.currentTable}</span>
+              </h3>
+
+              <div id="cartItems" class="mb-4 space-y-4">
+                ${state.cart.length ? renderCartItems() : `
+                  <div class="text-center py-6 text-gray-400">
+                    <i class="fas fa-shopping-basket text-3xl mb-2"></i>
+                    <p>Seu carrinho está vazio</p>
+                  </div>
+                `}
+              </div>
+
+              <div class="border-t border-gray-200 pt-4">
+                <div class="flex justify-between mb-2">
+                  <span class="font-medium">Subtotal</span>
+                  <span id="subtotal">R$ ${calculateSubtotal().toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between mb-4">
+                  <span class="font-medium">Serviço (10%)</span>
+                  <span>R$ ${(calculateSubtotal() * 0.1).toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span class="text-emerald-600">R$ ${(calculateSubtotal() * 1.1).toFixed(2)}</span>
+                </div>
+
+                <!-- Botão com ID e estado dinâmico -->
+                <button id="submitOrderBtn"
+                        onclick="confirmOrderSubmission()"
+                        class="w-full mt-6 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition flex items-center justify-center ${!state.cart.length ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${!state.cart.length ? 'disabled' : ''}>
+                  <i class="fas fa-paper-plane mr-2"></i> Enviar Pedido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAttendantView() {
+      const pendingOrders = state.orders.filter(o => !o.completed);
+      const completedOrders = state.orders.filter(o => o.completed);
+
+      mainContent.innerHTML = `
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-2xl font-bold mb-6 text-gray-800">Painel de Pedidos</h2>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+              <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-xl font-semibold text-gray-700 flex items-center">
+                    Pedidos Pendentes
+                    ${pendingOrders.length ? `<span class="ml-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">${pendingOrders.length}</span>` : ''}
+                  </h3>
+                  <button onclick="playNotificationSound()" class="text-sm text-emerald-600 hover:text-emerald-800 font-medium">
+                    <i class="fas fa-bell mr-1"></i> Testar Notificação
+                  </button>
+                </div>
+
+                ${pendingOrders.length ? `
+                  <div class="space-y-4">
+                    ${pendingOrders.map(order => `
+                      <div class="border border-gray-200 rounded-lg p-4 hover:border-emerald-300 transition fade-in">
+                        <div class="flex justify-between items-start mb-2">
+                          <div>
+                            <span class="font-bold">Mesa ${order.table}</span>
+                            <span class="ml-2 text-sm text-gray-500">${new Date(order.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                          <button onclick="completeOrder(${order.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition">
+                            Concluir
+                          </button>
+                        </div>
+
+                        <ul class="space-y-2 mt-2">
+                          ${order.items.map(item => `
+                            <li class="flex justify-between text-sm">
+                              <span>${item.quantity}x ${item.name}</span>
+                              <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
+                            </li>
+                          `).join('')}
+                        </ul>
+
+                        <div class="border-t border-gray-200 pt-3 mt-3">
+                          <div class="flex justify-between font-medium">
+                            <span>Total</span>
+                            <span>R$ ${order.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : `
+                  <div class="text-center py-10 text-gray-400">
+                    <i class="fas fa-check-circle text-3xl mb-2"></i>
+                    <p>Todos os pedidos estão concluídos</p>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <div>
+              <div class="bg-white rounded-xl shadow-md p-6 h-full">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Pedidos Concluídos</h3>
+
+                ${completedOrders.length ? `
+                  <div class="space-y-3">
+                    ${completedOrders.slice(0, 5).map(order => `
+                      <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div class="flex justify-between text-sm">
+                          <span class="font-medium">Mesa ${order.table}</span>
+                          <span class="text-gray-500">${new Date(order.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                          ${order.items.length} itens • R$ ${order.total.toFixed(2)}
+                        </div>
+                      </div>
+                    `).join('')}
+
+                    ${completedOrders.length > 5 ? `<div class="text-center text-sm text-gray-500 mt-2">+ ${completedOrders.length - 5} outros</div>` : ''}
+                  </div>
+                ` : `
+                  <div class="text-center py-10 text-gray-400">
+                    <i class="fas fa-history text-3xl mb-2"></i>
+                    <p>Nenhum pedido concluído</p>
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Funções auxiliares
+    function updateActiveNav() {
+      document.getElementById('clientLink').classList.toggle('bg-emerald-700', state.currentView === 'client');
+      document.getElementById('attendantLink').classList.toggle('bg-emerald-700', state.currentView === 'attendant');
+    }
+
+    function renderMenuItems(items) {
+      return items.map(item => `
+        <div class="bg-white rounded-xl shadow overflow-hidden hover:shadow-md transition">
+          <img src="${item.image}" alt="${item.name}" class="w-full h-40 object-cover">
+          <div class="p-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-gray-800">${item.name}</h4>
+                <p class="text-sm text-gray-500 mt-1">${item.description}</p>
+              </div>
+              <span class="font-bold text-emerald-600">R$ ${item.price.toFixed(2)}</span>
+            </div>
+            <button onclick="addToCart(${item.id})" class="w-full mt-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition font-medium flex items-center justify-center">
+              <i class="fas fa-plus mr-2"></i> Adicionar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderCartItems() {
+      return state.cart.map(item => `
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+          <div>
+            <h4 class="font-medium">${item.quantity}x ${item.name}</h4>
+            <div class="text-sm text-gray-500 mt-1">R$ ${item.price.toFixed(2)} cada</div>
+          </div>
+          <div class="flex items-center">
+            <span class="font-bold mr-4">R$ ${(item.price * item.quantity).toFixed(2)}</span>
+            <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function calculateSubtotal() {
+      return state.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+
+    function checkForUpdates() {
+      const storedOrders = JSON.parse(localStorage.getItem('restaurantOrders') || '[]');
+      if (JSON.stringify(storedOrders) !== JSON.stringify(state.orders)) {
+        state.orders = storedOrders;
+        if (state.currentView === 'attendant') renderAttendantView();
+      }
+    }
+
+    // Habilita/Desabilita o botão Enviar Pedido conforme o carrinho
+    function setSubmitButtonState() {
+      const btn = document.getElementById('submitOrderBtn');
+      if (!btn) return;
+      const hasItems = state.cart.length > 0;
+      btn.disabled = !hasItems;
+      btn.classList.toggle('opacity-50', !hasItems);
+      btn.classList.toggle('cursor-not-allowed', !hasItems);
+    }
+
+    // Funções chamadas pelo HTML
+    function addToCart(itemId) {
+      if (!state.currentTable) { showToast('Selecione uma mesa primeiro'); return; }
+      const allItems = Object.values(menuItems).flat();
+      const item = allItems.find(i => i.id === itemId);
+      if (!item) { showToast('Item não encontrado no menu'); return; }
+
+      const existingItem = state.cart.find(i => i.id === item.id);
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        state.cart.push({ id: item.id, name: item.name, price: item.price, quantity: 1 });
+      }
+
+      localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify(state.cart));
+      updateCart();               // atualiza UI
+      showToast(`${item.name} adicionado ao pedido`);
+    }
+
+    function selectTable(tableNumber) {
+      state.currentTable = tableNumber;
+      state.cart = JSON.parse(localStorage.getItem(`table_${tableNumber}_cart`)) || [];
+      renderClientView();
+    }
+
+    function changeTable() {
+      state.currentTable = null;
+      state.cart = [];
+      renderClientView();
+    }
+
+    function filterMenu(category) {
+      const items = menuItems[category];
+      document.getElementById('menuItems').innerHTML = renderMenuItems(items);
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.toggle('bg-emerald-600', btn.textContent === category);
+        btn.classList.toggle('text-white', btn.textContent === category);
+        btn.classList.toggle('bg-gray-200', btn.textContent !== category);
+      });
+    }
+
+    function removeFromCart(itemId) {
+      const itemIndex = state.cart.findIndex(i => i.id === itemId);
+      if (itemIndex > -1) {
+        const item = state.cart[itemIndex];
+        if (item.quantity > 1) item.quantity -= 1;
+        else state.cart.splice(itemIndex, 1);
+      }
+      localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify(state.cart));
+      updateCart();
+    }
+
+    function updateCart() {
+      const cartItemsElement = document.getElementById('cartItems');
+      const subtotalElement = document.getElementById('subtotal');
+
+      if (cartItemsElement) {
+        cartItemsElement.innerHTML = state.cart.length ? renderCartItems() : `
+          <div class="text-center py-6 text-gray-400">
+            <i class="fas fa-shopping-basket text-3xl mb-2"></i>
+            <p>Seu carrinho está vazio</p>
+          </div>
+        `;
+      }
+      if (subtotalElement) {
+        subtotalElement.textContent = `R$ ${calculateSubtotal().toFixed(2)}`;
+      }
+      setSubmitButtonState(); // mantém botão em sincronia
+    }
+
+    function confirmOrderSubmission() {
+      if (!state.cart.length) { showToast('Adicione itens ao carrinho antes de enviar'); return; }
+      modalTitle.textContent = 'Confirmar Pedido';
+      modalMessage.textContent = `Tem certeza que deseja enviar este pedido para a Mesa ${state.currentTable}?`;
+      confirmationModal.classList.remove('hidden');
+
+      modalConfirm.onclick = () => {
+        submitOrder();
+        confirmationModal.classList.add('hidden');
+      };
+    }
+
+    function submitOrder() {
+      const newOrder = {
+        id: Date.now(),
+        table: state.currentTable,
+        items: [...state.cart],
+        timestamp: new Date().toISOString(),
+        total: calculateSubtotal() * 1.1,
+        completed: false
+      };
+
+      state.orders.unshift(newOrder);
+      state.cart = [];
+      localStorage.setItem('restaurantOrders', JSON.stringify(state.orders));
+      localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify([]));
+
+      renderClientView();
+      showToast(`Pedido da Mesa ${newOrder.table} enviado com sucesso!`);
+
+      if (state.currentView === 'attendant') {
+        renderAttendantView();
+        showNewOrderNotification();
+      }
+    }
+
+    function completeOrder(orderId) {
+      const orderIndex = state.orders.findIndex(o => o.id === orderId);
+      if (orderIndex > -1) {
+        state.orders[orderIndex].completed = true;
+        state.orders[orderIndex].completedAt = new Date().toISOString();
+        localStorage.setItem('restaurantOrders', JSON.stringify(state.orders));
+        renderAttendantView();
+        showToast(`Pedido da Mesa ${state.orders[orderIndex].table} concluído`);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast fade-in';
+      toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i><span>${message}</span>`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition', 'duration-500');
+        setTimeout(() => toast.remove(), 500);
+      }, 2000);
+    }
+
+    function showNewOrderNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center';
+      notification.innerHTML = `<i class="fas fa-bell mr-2"></i> Novo pedido da Mesa ${state.orders[0].table}!`;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.classList.add('opacity-0', 'transition', 'duration-500');
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+
+      playNotificationSound();
+    }
+
+    function playNotificationSound() {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2575/2575-preview.mp3');
+      audio.play().catch(e => console.log("Não foi possível tocar o som: ", e));
+    }
+
+    // Torna as funções globais para acesso pelo HTML
+    window.selectTable = selectTable;
+    window.changeTable = changeTable;
+    window.filterMenu = filterMenu;
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+    window.confirmOrderSubmission = confirmOrderSubmission;
+    window.completeOrder = completeOrder;
+    window.playNotificationSound = playNotificationSound;
+  </script>
+</body>
+</html>
