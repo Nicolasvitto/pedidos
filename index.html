@@ -9,16 +9,9 @@
   <style>
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .fade-in { animation: fadeIn 0.5s ease-in; }
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;
-    }
-    .modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; max-width: 500px; width: 90%; }
-    .toast {
-      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-      background-color: #059669; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      display: flex; align-items: center; z-index: 999;
-    }
+    .modal-overlay { position:fixed; inset:0; background-color:rgba(0,0,0,.5); display:flex; justify-content:center; align-items:center; z-index:1000; }
+    .modal-content { background:#fff; padding:2rem; border-radius:.5rem; max-width:500px; width:90%; }
+    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:#059669; color:#fff; padding:.5rem 1rem; border-radius:.5rem; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); display:flex; align-items:center; z-index:999; }
   </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -26,7 +19,7 @@
     <div class="container mx-auto px-4 py-6 flex justify-between items-center">
       <div class="flex items-center space-x-2">
         <img src="https://placehold.co/40" alt="Logo do restaurante" class="rounded-full">
-        <h1 class="text-2xl font-bold">Restaurante Gourmet</h1>
+        <h1 class="text-2xl font-bold">Bar do Mocotó</h1>
       </div>
       <nav>
         <ul class="flex space-x-4">
@@ -52,23 +45,65 @@
   </div>
 
   <script>
-    // Banco de dados local (simulado)
+    // ===== CARDÁPIO: Bar do Mocotó =====
     const menuItems = {
-      'Entradas': [
-        { id: 1, name: 'Pão de Alho', price: 12.90, description: 'Pão italiano com alho e queijo derretido', image: 'https://placehold.co/300x200?text=Pão+de+Alho' },
-        { id: 2, name: 'Bruschetta', price: 14.50, description: 'Torradas com tomate, manjericão e azeite', image: 'https://placehold.co/300x200?text=Bruschetta' }
+      'Cervejas lata': [
+        { id: 1,  name: 'Skol 269ml',      price: 5.00,  description: 'Lata 269ml', image: 'https://www.sondadelivery.com.br/img.aspx/sku/1132989/530/7891149103102-(1).jpg' },
+        { id: 2,  name: 'Skol 350ml',      price: 6.00,  description: 'Lata 350ml', image: 'https://savegnagoio.vtexassets.com/arquivos/ids/451158-1200-auto?v=638610711235400000&width=1200&height=auto&aspect=true' },
+        { id: 3,  name: 'Skol 550ml',      price: 8.00,  description: 'Lata 550ml', image: 'https://paulistaoatacadista.vtexassets.com/arquivos/ids/385873-800-450?v=638610711316300000&width=800&height=450&aspect=true' },
+        { id: 4,  name: 'Itaipava 269ml',  price: 4.00,  description: 'Lata 269ml', image: 'https://admtai.com/wp-content/uploads/2024/07/Itaipava-269-ml-un.jpeg' },
+        { id: 5,  name: 'Itaipava 350ml',  price: 5.00,  description: 'Lata 350ml', image: 'https://savegnagoio.vtexassets.com/arquivos/ids/360080-800-450?v=638080599656300000&width=800&height=450&aspect=true' },
+        { id: 6,  name: 'Original 269ml',  price: 5.00,  description: 'Lata 269ml', image: 'https://static.wixstatic.com/media/ba1283_e073d29c245240c5a32bb08096c76e28~mv2.png/v1/fill/w_560,h_560,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/ba1283_e073d29c245240c5a32bb08096c76e28~mv2.png' },
+        { id: 7,  name: 'Heineken 350ml',  price: 7.00,  description: 'Lata 350ml', image: 'https://mercantilnovaera.vtexassets.com/arquivos/ids/215746-800-450?v=638745395587970000&width=800&height=450&aspect=true' },
+        { id: 8,  name: 'Brahma 350ml',    price: 6.00,  description: 'Lata 350ml', image: 'https://savegnagoio.vtexassets.com/arquivos/ids/448774-800-450?v=638526022465370000&width=800&height=450&aspect=true' }
       ],
-      'Pratos Principais': [
-        { id: 3, name: 'Filé Mignon', price: 59.90, description: '250g com molho de vinho tinto', image: 'https://placehold.co/300x200?text=Filé+Mignon' },
-        { id: 4, name: 'Risoto de Camarão', price: 45.50, description: 'Arroz arbóreo com camarões', image: 'https://placehold.co/300x200?text=Risoto' }
+      'Cerveja garrafa': [
+        { id: 9,  name: 'Original 600ml',        price: 15.00, description: 'Garrafa 600ml', image: 'https://tdc099.vtexassets.com/arquivos/ids/226209-800-450?v=638303130032600000&width=800&height=450&aspect=true' },
+        { id: 10, name: 'Heineken 600ml',        price: 15.00, description: 'Garrafa 600ml', image: 'https://hiperideal.vtexassets.com/arquivos/ids/197890/1922696.jpg?v=637855539470630000' },
+        { id: 11, name: 'Itaipava Litrão',       price: 12.00, description: '1 litro',       image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRym53mi8pBgO4rrjPkTc2fuaz3CfxPeXlYQA&s' },
+        { id: 12, name: 'Petra Litrão',          price: 14.00, description: '1 litro',       image: 'https://guiadacervejabr.com/wp-content/uploads/2023/07/petra_litrao.png' },
+        { id: 13, name: 'Skol Litrão',           price: 14.00, description: '1 litro',       image: 'https://images.tcdn.com.br/img/img_prod/673450/cerveja_skol_litrao_5161_1_3704954c8c53543109c4c743e3659401.jpg' }
       ],
-      'Bebidas': [
-        { id: 5, name: 'Água Mineral', price: 5.00, description: 'Garrafa 500ml', image: 'https://placehold.co/300x200?text=Água' },
-        { id: 6, name: 'Refrigerante', price: 7.50, description: 'Lata 350ml', image: 'https://placehold.co/300x200?text=Refri' }
+      'Doses': [
+        { id: 14, name: 'Velho Barreiro',        price: 4.00,  description: 'Cachaça',       image: 'https://zonasul.vtexassets.com/arquivos/ids/3081259-800-450?v=637943078674400000&width=800&height=450&aspect=true' },
+        { id: 15, name: 'Cachaça 51',            price: 4.00,  description: 'Cachaça',       image: 'https://liderdb.agilecdn.com.br/791.jpg' },
+        { id: 16, name: 'Pitu',                   price: 4.00,  description: 'Cachaça',       image: 'https://armazemnordestino.com.br/wp-content/uploads/2023/03/latao-pitu.jpg' },
+        { id: 17, name: 'Dreher',                 price: 6.00,  description: 'Conhaque',      image: 'https://covabra.vtexassets.com/arquivos/ids/521861-800-450?v=638890922708300000&width=800&height=450&aspect=true' },
+        { id: 18, name: 'São Francisco',          price: 6.00,  description: 'Cachaça',       image: 'https://io.convertiez.com.br/m/superpaguemenos/shop/products/images/23957/medium/cachaca-sao-francisco-970ml_92102.png' },
+        { id: 19, name: 'Kariri c/ mel',          price: 7.00,  description: 'Cachaça com mel', image: 'https://m.media-amazon.com/images/I/51oRQSNVutL._UF1000,1000_QL80_.jpg' },
+        { id: 20, name: 'Domecq',                 price: 8.00,  description: 'Conhaque',      image: 'https://casadomecq.com.co/wp-content/uploads/2024/03/BrandyDomecq750-15001500-1.png' },
+        { id: 21, name: 'Campari',                price: 15.00, description: 'Aperitivo',     image: 'https://covabra.vtexassets.com/arquivos/ids/497238-800-450?v=638890692377830000&width=800&height=450&aspect=true' },
+        { id: 22, name: 'Vodka Balalaika',        price: 6.00,  description: 'Vodka',         image: 'https://destro.fbitsstatic.net/img/p/vodka-balalaika-1l-71064/257600.jpg?w=500&h=500&v=202501231555&qs=ignore' }
+      ],
+      'Espetinhos e Salgados': [
+        { id: 23, name: 'Carne',                 price: 7.00, description: 'Espetinho', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLbDe4SEaNx6GC5cRC398_VW7r50YMyJPDFA&s' },
+        { id: 24, name: 'Linguiça',              price: 7.00, description: 'Espetinho', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsxZ1LKoL6E6_-tt0prxUsHL9nbQPhqYkkaw&s' },
+        { id: 25, name: 'Frango',                price: 7.00, description: 'Espetinho', image: 'https://www.vivaespetos.com.br/wp-content/uploads/2019/05/frango.jpg' },
+        { id: 26, name: 'Kafta c/ queijo',       price: 7.00, description: 'Espetinho', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRobgORV7PMC4Ewk3UHo7mTj5SjoKwQxQUfjA&s' },
+        { id: 27, name: 'Medalhão de frango',    price: 7.00, description: 'Espetinho', image: 'https://www.vivaespetos.com.br/wp-content/uploads/2019/05/medfrango.jpg' },
+        { id: 28, name: 'Queijo coalho',         price: 7.00, description: 'Espetinho', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRF_5v6wfwAzAj7gI7dJ0FTZUlVgOfHeX7mfw&s' },
+        { id: 29, name: 'Coxinha',               price: 6.00, description: 'Salgado',  image: 'data:image/jpeg;base64,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' },
+        { id: 30, name: 'Risole',                price: 6.00, description: 'Salgado',  image: 'https://i.ytimg.com/vi/T2zk4C4G1xk/maxresdefault.jpg' },
+        { id: 31, name: 'Kibe',                  price: 6.00, description: 'Salgado',  image: 'https://i.ytimg.com/vi/2Se1O4CW--8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAWWAPLVmXiTd2CfGddDeOkbhYqxw' }
+      ],
+      'Drinks': [
+        { id: 32, name: 'Copão de Gin',                     price: 10.00, description: 'Drink', image: 'https://supliutech.nyc3.cdn.digitaloceanspaces.com/catalogoapp-aws/2023-03-19/86a49866-26bc-44fb-b213-33d0353120ce.jpeg' },
+        { id: 33, name: 'Copão de Whisky Chanceler',        price: 10.00, description: 'Drink', image: 'https://whatsmenu.s3.amazonaws.com/production/adegaleaodourado/products/2726269/COPAOChanceler' },
+        { id: 34, name: 'Copão de Whisky Cavalo',           price: 22.00, description: 'Drink', image: 'https://adegadotcheres.meucatalogofacil.com/_core/_uploads/1891/2022/03/1531090322khb8f5127h.png' },
+        { id: 35, name: 'Caipirinha de Cachaça',            price: 15.00, description: 'Drink', image: 'https://i.ytimg.com/vi/bXhdzrZSY_Y/sddefault.jpg' },
+        { id: 36, name: 'Caipirinha de Vodka',              price: 18.00, description: 'Drink', image:  'https://i.ytimg.com/vi/UnPCorWtQC4/maxresdefault.jpg' },
+        { id: 37, name: 'Caipirinha de Gin',                price: 18.00, description: 'Drink', image: 'https://images.ctfassets.net/qfxflpv0atz9/15Wgw7R9j1t5z7nCm0AjGC/c8ab194c645d98d21128c89700eb91bd/20220121163808-drinkscomgin-header-fita.jpg?fm=webp&q=90' },
+        { id: 38, name: 'Copão de Malibu',                  price: 23.00, description: 'Drink', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXzvcWi1IaUJanh2EA7Ij01G-t5lln1GsKWA&s' }
+      ],
+      'Vinhos': [
+        { id: 39, name: 'Pérgola (dose)',                   price: 5.00,  description: 'Taça',    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRLT8rAhUVxuxh2O6DNzf0ey5zr0QQvgeDnA&s' },
+        { id: 40, name: 'Pérgola (garrafa)',                price: 30.00, description: 'Garrafa', image: 'https://http2.mlstatic.com/D_NQ_NP_955975-MLA54356232352_032023-O.webp' },
+        { id: 41, name: 'Vinho do Sul Artesanal (dose)',    price: 5.00,  description: 'Taça',    image: 'https://www.cristaisdeblumenau.com.br/cdn/shop/files/taca-vale-dos-vinhedos-mozart.jpg?v=1741973518&width=1200' },
+        { id: 42, name: 'Vinho do Sul Artesanal (garrafa)', price: 30.00, description: 'Garrafa', image: 'https://sdmntprwestus2.oaiusercontent.com/files/00000000-ece8-61f8-9d47-3392e4e0985f/raw?se=2025-08-20T04%3A38%3A05Z&sp=r&sv=2024-08-04&sr=b&scid=8d2db067-368d-5f0d-ad2d-92b212f3a611&skoid=a3412ad4-1a13-47ce-91a5-c07730964f35&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-08-19T21%3A52%3A38Z&ske=2025-08-20T21%3A52%3A38Z&sks=b&skv=2024-08-04&sig=cOqfBuTxmKu3h7i%2BhKQjRSMnddXXyxW6Jcvwk0wB310%3D' }
       ]
     };
 
-    // Estado global
+    // ===== Estado global =====
     let state = {
       currentView: 'client',
       currentTable: null,
@@ -76,7 +111,7 @@
       orders: JSON.parse(localStorage.getItem('restaurantOrders')) || []
     };
 
-    // Elementos DOM
+    // ===== Elementos DOM =====
     const mainContent = document.getElementById('mainContent');
     const confirmationModal = document.getElementById('confirmationModal');
     const modalTitle = document.getElementById('modalTitle');
@@ -84,44 +119,21 @@
     const modalCancel = document.getElementById('modalCancel');
     const modalConfirm = document.getElementById('modalConfirm');
 
-    // Inicialização
+    // ===== Inicialização =====
     document.addEventListener('DOMContentLoaded', () => {
       if (state.currentTable) {
         state.cart = JSON.parse(localStorage.getItem(`table_${state.currentTable}_cart`)) || [];
       }
-
-      document.getElementById('clientLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        loadClientView();
-      });
-
-      document.getElementById('attendantLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        loadAttendantView();
-      });
-
-      modalCancel.addEventListener('click', () => {
-        confirmationModal.classList.add('hidden');
-      });
-
+      document.getElementById('clientLink').addEventListener('click', (e) => { e.preventDefault(); loadClientView(); });
+      document.getElementById('attendantLink').addEventListener('click', (e) => { e.preventDefault(); loadAttendantView(); });
+      modalCancel.addEventListener('click', () => { confirmationModal.classList.add('hidden'); });
       loadClientView();
-
-      // Verificador de atualizações a cada 2 segundos
       setInterval(checkForUpdates, 2000);
     });
 
-    // Funções principais
-    function loadClientView() {
-      state.currentView = 'client';
-      updateActiveNav();
-      renderClientView();
-    }
-
-    function loadAttendantView() {
-      state.currentView = 'attendant';
-      updateActiveNav();
-      renderAttendantView();
-    }
+    // ===== Views =====
+    function loadClientView() { state.currentView = 'client'; updateActiveNav(); renderClientView(); }
+    function loadAttendantView() { state.currentView = 'attendant'; updateActiveNav(); renderAttendantView(); }
 
     function renderClientView() {
       mainContent.innerHTML = `
@@ -130,10 +142,9 @@
           ${!state.currentTable ? renderTableView() : renderMenuView()}
         </div>
       `;
-
       if (state.currentTable) {
         filterMenu(Object.keys(menuItems)[0]);
-        setSubmitButtonState(); // garante estado do botão após renderização
+        setSubmitButtonState();
       }
     }
 
@@ -199,18 +210,15 @@
                   <span class="font-medium">Subtotal</span>
                   <span id="subtotal">R$ ${calculateSubtotal().toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between mb-4">
-                  <span class="font-medium">Serviço (10%)</span>
-                  <span>R$ ${(calculateSubtotal() * 0.1).toFixed(2)}</span>
-                </div>
+                <!-- taxa removida -->
                 <div class="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span class="text-emerald-600">R$ ${(calculateSubtotal() * 1.1).toFixed(2)}</span>
+                  <span class="text-emerald-600">R$ ${calculateSubtotal().toFixed(2)}</span>
                 </div>
 
-                <!-- Botão com ID e estado dinâmico -->
                 <button id="submitOrderBtn"
-                        onclick="confirmOrderSubmission()"
+                        onclick="confirmOrderSubmission()
+                        "
                         class="w-full mt-6 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition flex items-center justify-center ${!state.cart.length ? 'opacity-50 cursor-not-allowed' : ''}"
                         ${!state.cart.length ? 'disabled' : ''}>
                   <i class="fas fa-paper-plane mr-2"></i> Enviar Pedido
@@ -229,7 +237,6 @@
       mainContent.innerHTML = `
         <div class="max-w-6xl mx-auto">
           <h2 class="text-2xl font-bold mb-6 text-gray-800">Painel de Pedidos</h2>
-
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
               <div class="bg-white rounded-xl shadow-md p-6">
@@ -252,11 +259,8 @@
                             <span class="font-bold">Mesa ${order.table}</span>
                             <span class="ml-2 text-sm text-gray-500">${new Date(order.timestamp).toLocaleTimeString()}</span>
                           </div>
-                          <button onclick="completeOrder(${order.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition">
-                            Concluir
-                          </button>
+                          <button onclick="completeOrder(${order.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition">Concluir</button>
                         </div>
-
                         <ul class="space-y-2 mt-2">
                           ${order.items.map(item => `
                             <li class="flex justify-between text-sm">
@@ -265,7 +269,6 @@
                             </li>
                           `).join('')}
                         </ul>
-
                         <div class="border-t border-gray-200 pt-3 mt-3">
                           <div class="flex justify-between font-medium">
                             <span>Total</span>
@@ -287,7 +290,6 @@
             <div>
               <div class="bg-white rounded-xl shadow-md p-6 h-full">
                 <h3 class="text-xl font-semibold text-gray-700 mb-4">Pedidos Concluídos</h3>
-
                 ${completedOrders.length ? `
                   <div class="space-y-3">
                     ${completedOrders.slice(0, 5).map(order => `
@@ -301,7 +303,6 @@
                         </div>
                       </div>
                     `).join('')}
-
                     ${completedOrders.length > 5 ? `<div class="text-center text-sm text-gray-500 mt-2">+ ${completedOrders.length - 5} outros</div>` : ''}
                   </div>
                 ` : `
@@ -317,7 +318,7 @@
       `;
     }
 
-    // Funções auxiliares
+    // ===== Auxiliares =====
     function updateActiveNav() {
       document.getElementById('clientLink').classList.toggle('bg-emerald-700', state.currentView === 'client');
       document.getElementById('attendantLink').classList.toggle('bg-emerald-700', state.currentView === 'attendant');
@@ -352,27 +353,22 @@
           </div>
           <div class="flex items-center">
             <span class="font-bold mr-4">R$ ${(item.price * item.quantity).toFixed(2)}</span>
-            <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700">
-              <i class="fas fa-trash"></i>
-            </button>
+            <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       `).join('');
     }
 
-    function calculateSubtotal() {
-      return state.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    }
+    function calculateSubtotal() { return state.cart.reduce((t, i) => t + (i.price * i.quantity), 0); }
 
     function checkForUpdates() {
-      const storedOrders = JSON.parse(localStorage.getItem('restaurantOrders') || '[]');
-      if (JSON.stringify(storedOrders) !== JSON.stringify(state.orders)) {
-        state.orders = storedOrders;
+      const stored = JSON.parse(localStorage.getItem('restaurantOrders') || '[]');
+      if (JSON.stringify(stored) !== JSON.stringify(state.orders)) {
+        state.orders = stored;
         if (state.currentView === 'attendant') renderAttendantView();
       }
     }
 
-    // Habilita/Desabilita o botão Enviar Pedido conforme o carrinho
     function setSubmitButtonState() {
       const btn = document.getElementById('submitOrderBtn');
       if (!btn) return;
@@ -382,36 +378,27 @@
       btn.classList.toggle('cursor-not-allowed', !hasItems);
     }
 
-    // Funções chamadas pelo HTML
+    // ===== Handlers =====
     function addToCart(itemId) {
       if (!state.currentTable) { showToast('Selecione uma mesa primeiro'); return; }
-      const allItems = Object.values(menuItems).flat();
-      const item = allItems.find(i => i.id === itemId);
+      const all = Object.values(menuItems).flat();
+      const item = all.find(i => i.id === itemId);
       if (!item) { showToast('Item não encontrado no menu'); return; }
-
-      const existingItem = state.cart.find(i => i.id === item.id);
-      if (existingItem) {
-        existingItem.quantity += 1;
-      } else {
-        state.cart.push({ id: item.id, name: item.name, price: item.price, quantity: 1 });
-      }
-
+      const existing = state.cart.find(i => i.id === item.id);
+      if (existing) existing.quantity += 1;
+      else state.cart.push({ id: item.id, name: item.name, price: item.price, quantity: 1 });
       localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify(state.cart));
-      updateCart();               // atualiza UI
+      updateCart();
       showToast(`${item.name} adicionado ao pedido`);
     }
 
-    function selectTable(tableNumber) {
-      state.currentTable = tableNumber;
-      state.cart = JSON.parse(localStorage.getItem(`table_${tableNumber}_cart`)) || [];
+    function selectTable(n) {
+      state.currentTable = n;
+      state.cart = JSON.parse(localStorage.getItem(`table_${n}_cart`)) || [];
       renderClientView();
     }
 
-    function changeTable() {
-      state.currentTable = null;
-      state.cart = [];
-      renderClientView();
-    }
+    function changeTable() { state.currentTable = null; state.cart = []; renderClientView(); }
 
     function filterMenu(category) {
       const items = menuItems[category];
@@ -424,32 +411,28 @@
     }
 
     function removeFromCart(itemId) {
-      const itemIndex = state.cart.findIndex(i => i.id === itemId);
-      if (itemIndex > -1) {
-        const item = state.cart[itemIndex];
-        if (item.quantity > 1) item.quantity -= 1;
-        else state.cart.splice(itemIndex, 1);
+      const idx = state.cart.findIndex(i => i.id === itemId);
+      if (idx > -1) {
+        if (state.cart[idx].quantity > 1) state.cart[idx].quantity -= 1;
+        else state.cart.splice(idx, 1);
       }
       localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify(state.cart));
       updateCart();
     }
 
     function updateCart() {
-      const cartItemsElement = document.getElementById('cartItems');
-      const subtotalElement = document.getElementById('subtotal');
-
-      if (cartItemsElement) {
-        cartItemsElement.innerHTML = state.cart.length ? renderCartItems() : `
+      const list = document.getElementById('cartItems');
+      const subtotalEl = document.getElementById('subtotal');
+      if (list) {
+        list.innerHTML = state.cart.length ? renderCartItems() : `
           <div class="text-center py-6 text-gray-400">
             <i class="fas fa-shopping-basket text-3xl mb-2"></i>
             <p>Seu carrinho está vazio</p>
           </div>
         `;
       }
-      if (subtotalElement) {
-        subtotalElement.textContent = `R$ ${calculateSubtotal().toFixed(2)}`;
-      }
-      setSubmitButtonState(); // mantém botão em sincronia
+      if (subtotalEl) subtotalEl.textContent = `R$ ${calculateSubtotal().toFixed(2)}`;
+      setSubmitButtonState();
     }
 
     function confirmOrderSubmission() {
@@ -457,11 +440,7 @@
       modalTitle.textContent = 'Confirmar Pedido';
       modalMessage.textContent = `Tem certeza que deseja enviar este pedido para a Mesa ${state.currentTable}?`;
       confirmationModal.classList.remove('hidden');
-
-      modalConfirm.onclick = () => {
-        submitOrder();
-        confirmationModal.classList.add('hidden');
-      };
+      modalConfirm.onclick = () => { submitOrder(); confirmationModal.classList.add('hidden'); };
     }
 
     function submitOrder() {
@@ -470,67 +449,52 @@
         table: state.currentTable,
         items: [...state.cart],
         timestamp: new Date().toISOString(),
-        total: calculateSubtotal() * 1.1,
+        total: calculateSubtotal(), // sem 10%
         completed: false
       };
-
       state.orders.unshift(newOrder);
       state.cart = [];
       localStorage.setItem('restaurantOrders', JSON.stringify(state.orders));
       localStorage.setItem(`table_${state.currentTable}_cart`, JSON.stringify([]));
-
       renderClientView();
       showToast(`Pedido da Mesa ${newOrder.table} enviado com sucesso!`);
-
-      if (state.currentView === 'attendant') {
-        renderAttendantView();
-        showNewOrderNotification();
-      }
+      if (state.currentView === 'attendant') { renderAttendantView(); showNewOrderNotification(); }
     }
 
     function completeOrder(orderId) {
-      const orderIndex = state.orders.findIndex(o => o.id === orderId);
-      if (orderIndex > -1) {
-        state.orders[orderIndex].completed = true;
-        state.orders[orderIndex].completedAt = new Date().toISOString();
+      const idx = state.orders.findIndex(o => o.id === orderId);
+      if (idx > -1) {
+        state.orders[idx].completed = true;
+        state.orders[idx].completedAt = new Date().toISOString();
         localStorage.setItem('restaurantOrders', JSON.stringify(state.orders));
         renderAttendantView();
-        showToast(`Pedido da Mesa ${state.orders[orderIndex].table} concluído`);
+        showToast(`Pedido da Mesa ${state.orders[idx].table} concluído`);
       }
     }
 
     function showToast(message) {
-      const toast = document.createElement('div');
-      toast.className = 'toast fade-in';
-      toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i><span>${message}</span>`;
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'transition', 'duration-500');
-        setTimeout(() => toast.remove(), 500);
-      }, 2000);
+      const el = document.createElement('div');
+      el.className = 'toast fade-in';
+      el.innerHTML = `<i class="fas fa-check-circle mr-2"></i><span>${message}</span>`;
+      document.body.appendChild(el);
+      setTimeout(() => { el.classList.add('opacity-0','transition','duration-500'); setTimeout(() => el.remove(), 500); }, 2000);
     }
 
     function showNewOrderNotification() {
-      const notification = document.createElement('div');
-      notification.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center';
-      notification.innerHTML = `<i class="fas fa-bell mr-2"></i> Novo pedido da Mesa ${state.orders[0].table}!`;
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        notification.classList.add('opacity-0', 'transition', 'duration-500');
-        setTimeout(() => notification.remove(), 500);
-      }, 3000);
-
+      const n = document.createElement('div');
+      n.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center';
+      n.innerHTML = `<i class="fas fa-bell mr-2"></i> Novo pedido da Mesa ${state.orders[0].table}!`;
+      document.body.appendChild(n);
+      setTimeout(() => { n.classList.add('opacity-0','transition','duration-500'); setTimeout(() => n.remove(), 500); }, 3000);
       playNotificationSound();
     }
 
     function playNotificationSound() {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2575/2575-preview.mp3');
-      audio.play().catch(e => console.log("Não foi possível tocar o som: ", e));
+      audio.play().catch(() => {});
     }
 
-    // Torna as funções globais para acesso pelo HTML
+    // Expor no escopo global
     window.selectTable = selectTable;
     window.changeTable = changeTable;
     window.filterMenu = filterMenu;
